@@ -1,11 +1,11 @@
 # Add references
-
+from fastmcp import FastMCP
 
 # Create an MCP server
-
+mcp = FastMCP(name="Inventory")
 
 # Add an inventory check mcp tool
-
+@mcp.tool()
 def get_inventory_levels() -> dict:
     """Returns current inventory for all products."""
     return {
@@ -22,7 +22,7 @@ def get_inventory_levels() -> dict:
     }
 
 # Add a weekly sales mcp tool
-
+@mcp.tool()
 def get_weekly_sales() -> dict:
     """Returns number of units sold last week."""
     return {
@@ -39,3 +39,6 @@ def get_weekly_sales() -> dict:
     }
 
 # Run the MCP server
+    """This code starts the MCP server, making your tools available for discovery and use by the agent. Setting show_banner=False prevents the startup banner from being printed to stdout, which would corrupt the MCP stdio protocol.
+    """
+mcp.run(show_banner=False)
