@@ -18,10 +18,24 @@ print(f"Using agent: {agent_name}\n")
 # TODO: Connect to the project and create a conversation
 # Add your code here to:
 # 1. Create DefaultAzureCredential
+credential = DefaultAzureCredential(
+    exclude_environment_credentials = True,
+    exclude_managed_identity_credential = True
+)
 # 2. Create AIProjectClient with endpoint
+project_client = AIProjectClient(
+    credential=credential,
+    endpoint=project_endpoint
+)
 # 3. Get the OpenAI client
+openai_client = project_client.get_openai_client()
 # 4. Get the agent by name
+agent = project_client.agents.get(agent_name=agent_name)
+print(f"Connected to agent: {agent.name} (id: {agent.id})\n")
 # 5. Create a new conversation
+conversation = openai_client.conversations.create(items=[])
+print(f"Created conversation (id: {conversation.id})\n")
+
 
 
 # Conversation history for context (client-side tracking)
@@ -38,7 +52,71 @@ def send_message_to_agent(user_message):
         # TODO: Add user message to conversation and get response
         # Add your code here to:
         # 1. Add the user message to the conversation using conversations.items.create()
+        openai_client.conversations.items.create(
+            conversation_id=conversation.id,
+            items=[{"type": "message", "role": "user", "content": user_message}],
+        )
+        
+        conversation_history.append({
+            "role":"user",
+            "content":user_message
+        })
         # 2. Create a response using responses.create() with agent reference
+        response = openai_client.responses.create(
+            conversation=conversation.id,
+            extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
+            input=""
+        )
+        
+        while True:
+            approval_requests = [
+                item for item in (getattr(response, "output",None)or [])
+                if getattr(item,"type",None) == "mcp_approval_request"
+            ]
+            
+            if not approval_requests:
+                break
+            
+            approval_items = []
+            
+            for approval_request in approval_requests:
+                print(f"[Approval required for: {approval_request.name}]\n")
+                print(f"Server: {approval_request.server_label}")
+                
+                # Show the tool call arguments for transparency
+                
+                import json
+                try:
+                    args = json.loads(approval_request.arguments)
+                    print(f"Arguments: {json.dumps(args, indent=2)}\n")
+                except Exception:
+                    print(f"Arguments: {approval_request.arguments}\n")
+                    
+                
+                approval_input = input("Approve this action? (yes/no): ").strip().lower()
+                approved = approval_input in ['yes', 'y']    
+                print("Approving action...\n" if approved else "Action denied.\n")
+                
+                approval_items.append({
+                    "type":"mcp_approval_response",
+                    "approval_request_id":approval_request.id,
+                    "approve":approved
+                })
+                
+            #Send the approval decisions and fetch the next response
+            openai_client.conversations.items.create(
+                conversation_id = conversation.id,
+                items=approval_items
+            )
+            
+            response = openai_client.responses.create(
+                conversation=conversation.id,
+                extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
+                input=""
+            )    
+                
+                        
+        
         # 3. Extract and display the response text
         # 4. Check for and display any citations
         # Your code will go here
