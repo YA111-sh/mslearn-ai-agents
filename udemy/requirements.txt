@@ -1,6 +1,26 @@
-azure-ai-projects>=1.0.0
-azure-identity>=1.15.0
-python-dotenv>=1.0.0
-# openai 3.x replaced httpx with httpx2, which breaks azure-ai-projects'
-# `import httpx`. Pinned until azure-ai-projects supports openai 3.
-openai<3
+# Loads .env files. PyPI package name is "python-dotenv";
+# the import in code is `from dotenv import load_dotenv`.
+python-dotenv==1.2.1
+
+# Azure auth (AzureCliCredential, DefaultAzureCredential, etc.)
+azure-identity==1.25.3
+
+# Microsoft Agent Framework - Foundry integration.
+# Provides `agent_framework.foundry.FoundryChatClient` / `FoundryAgent`.
+# Pulls in `agent-framework` (core) and `openai` automatically.
+agent-framework-foundry==1.13.1
+
+# Only needed if you go further and manage/publish persistent Foundry
+# agents (create_agent, create_version, toolboxes) directly via the SDK
+# rather than through agent_framework.foundry. Not imported by the
+# batman_agent.py script as written.
+azure-ai-projects==2.4.0
+
+# Core Microsoft Agent Framework abstractions (Agent, tools, workflows, MCP support)
+agent-framework-core==1.19.0
+
+
+# Official MCP client library, needed by MCPStreamableHTTPTool / MCPStdioTool.
+# Pinned below 2.0: mcp 2.x is a breaking rework for a newer protocol spec
+# and agent-framework's MCP tools currently target the 1.x API.
+mcp<2

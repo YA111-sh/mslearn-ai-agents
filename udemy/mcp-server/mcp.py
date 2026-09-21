@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
-from azure.ai.projects.models import PromptAgentDefinition, MCPTool, Tool
+from azure.ai.projects.models import PromptAgentDefinition, MCPTool
 
 load_dotenv()
 
