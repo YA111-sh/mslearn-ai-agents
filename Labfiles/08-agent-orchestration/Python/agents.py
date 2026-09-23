@@ -80,6 +80,7 @@ async def main():
     for response in output:
         for msg in cast(list[Message],response.messages):
             name = msg.author_name or ("assistant" if msg.role == "assistant" else "user")
+            # Print each message with a separator, its sequence number, author, and text.
             print(f"{'-' * 60}\n{i:02d} [{name}]\n{msg.text}")
             i +=1
             
